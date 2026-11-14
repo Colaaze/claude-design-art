@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tidepool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light dark;
+  --text:#F4FBFA; --dim:#D3E6E6; --line:rgba(244,251,250,.4); --shade:rgba(0,22,32,.5);
+  --bg1:#1d6f7a; --bg2:#03101b;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--text:#EAF6F6;--dim:#BCD3D6;--line:rgba(234,246,246,.35);--shade:rgba(0,10,18,.6)}
+}
+:root[data-theme="dark"]{--text:#EAF6F6;--dim:#BCD3D6;--line:rgba(234,246,246,.35);--shade:rgba(0,10,18,.6)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{
+  margin:0; color:var(--text); overflow-x:hidden;
+  font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  font-size:clamp(1.15rem,1.5vw,1.4rem); line-height:1.65;
+  background:linear-gradient(var(--bg1),var(--bg2)) fixed;
+  text-shadow:0 1px 22px var(--shade);
+}
+canvas{position:fixed; inset:0; width:100%; height:100%; display:block; z-index:0}
+main{position:relative; z-index:1}
+section{
+  min-height:100svh; display:none; flex-direction:column; justify-content:center;
+  padding:clamp(72px,12vh,140px) clamp(22px,6vw,96px);
+}
+.col{max-width:31rem}
+section.on{display:flex; animation:surface 1.3s ease both}
+@keyframes surface{from{opacity:0;filter:blur(12px)}to{opacity:1;filter:blur(0)}}
+h1:focus,h2:focus{outline:none}
+.step{display:flex; flex-wrap:wrap; gap:14px; margin-top:2.4rem}
+@media(min-width:900px){section.r .col{margin-left:auto}}
+h2{
+  margin:0 0 .3em; font-weight:300; font-size:clamp(2.2rem,5.4vw,4.6rem);
+  line-height:1.02; letter-spacing:.07em;
+}
+.range{display:block; margin:0 0 1.6em; font-style:italic; font-weight:400; color:var(--dim); letter-spacing:.14em; font-size:1.05rem; padding-bottom:.9em; border-bottom:1px solid var(--line)}
+p{margin:0 0 1.1em; color:var(--dim); font-weight:400}
+
+.hero{align-items:flex-start}
+h1{
+  margin:0; font-weight:300; font-size:clamp(3.4rem,14vw,14rem); line-height:.95;
+  letter-spacing:.1em; margin-left:-.04em;
+  animation:spread 5s cubic-bezier(.16,.7,.2,1) both;
+}
+@keyframes spread{from{letter-spacing:-.02em;opacity:0}30%{opacity:1}to{letter-spacing:.1em}}
+.sub{font-size:clamp(1.3rem,2.2vw,1.9rem); font-style:italic; font-weight:300; max-width:24ch; line-height:1.35; margin:1.2rem 0 0; color:var(--text)}
+.hint{margin-top:3rem; font-style:italic; color:var(--dim); font-size:1.05rem}
+
+.gauge{
+  position:fixed; z-index:3; right:clamp(18px,3vw,40px);
+  bottom:calc(env(safe-area-inset-bottom,0px) + clamp(16px,3vw,32px));
+  text-align:right; pointer-events:none; line-height:1.1;
+}
+.gauge b{display:block; font-weight:300; font-size:clamp(2rem,4vw,3.2rem); letter-spacing:.04em; font-variant-numeric:lining-nums tabular-nums}
+.gauge i{font-size:1.1rem; color:var(--dim); letter-spacing:.12em}
+
+.actions{display:flex; flex-wrap:wrap; gap:14px; margin-top:2rem}
+button,.btn{
+  font:inherit; font-size:1.15rem; letter-spacing:.08em; color:var(--text); text-decoration:none;
+  background:rgba(255,255,255,.07); border:1px solid var(--line); border-radius:999px;
+  padding:.55em 1.5em; cursor:pointer;
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  transition:background .3s,border-color .3s;
+}
+button:hover,.btn:hover{background:rgba(255,255,255,.18); border-color:var(--text)}
+button:focus-visible,.btn:focus-visible{outline:2px solid var(--text); outline-offset:3px}
+.top{position:fixed; z-index:4; top:0; left:0; right:0; display:flex; align-items:center; gap:clamp(14px,3vw,36px); padding:calc(env(safe-area-inset-top,0px) + 12px) clamp(18px,4vw,48px) 12px; background:rgba(0,24,34,.3); border-bottom:1px solid var(--line); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); text-shadow:none}
+.top .brand{font-size:1.5rem; letter-spacing:.12em; color:var(--text); text-decoration:none; flex:none}
+.top ul{list-style:none; margin:0 0 0 auto; padding:0; display:flex; gap:clamp(14px,2.2vw,30px); overflow-x:auto; scrollbar-width:none}
+.top ul::-webkit-scrollbar{display:none}
+.top a.l{color:var(--dim); text-decoration:none; letter-spacing:.1em; font-size:1.05rem; white-space:nowrap; padding:.15em 0; border-bottom:1px solid transparent; transition:color .25s,border-color .25s}
+.top a.l:hover,.top a.l[aria-current]{color:var(--text); border-color:var(--text)}
+.prog{position:absolute; left:0; bottom:-1px; height:2px; width:0; transition:width .9s ease; background:var(--text); opacity:.85}
+.rail{position:fixed; z-index:3; right:clamp(10px,1.6vw,22px); top:50%; transform:translateY(-50%); display:none; flex-direction:column; gap:18px}
+@media(min-width:900px){.rail{display:flex}}
+.rail a{position:relative; width:12px; height:12px; border-radius:50%; border:1px solid var(--text); display:block; transition:background .25s}
+.rail a[aria-current]{background:var(--text)}
+.rail a span{position:absolute; right:26px; top:50%; transform:translateY(-50%); white-space:nowrap; font-size:1rem; letter-spacing:.1em; padding:.2em .9em; border-radius:999px; background:rgba(0,20,30,.55); opacity:0; pointer-events:none; transition:opacity .25s}
+.rail a:hover span,.rail a:focus-visible span{opacity:1}
+.rail a:focus-visible,.top a:focus-visible{outline:2px solid var(--text); outline-offset:4px}
+.more{margin-top:clamp(48px,8vh,96px); max-width:72rem; width:100%}
+.facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:24px 40px; margin:0 0 clamp(36px,6vh,64px); padding:1.1rem 0 0; border-top:1px solid var(--line)}
+.facts dt{font-style:italic; color:var(--dim); letter-spacing:.1em; font-size:1rem}
+.facts dd{margin:.2em 0 0; font-size:1.35rem; line-height:1.3}
+.facts a,.cline a{color:var(--text); text-underline-offset:.25em}
+.themes{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:clamp(28px,4vw,56px)}
+.themes h3{margin:0 0 .5em; font-weight:400; font-size:1.7rem; letter-spacing:.06em; line-height:1.15; padding-top:.9rem; border-top:1px solid var(--line)}
+.themes p{font-size:1.1rem; max-width:36ch}
+.foot{display:flex; flex-wrap:wrap; justify-content:center; gap:10px 26px; margin:0 auto 1.4rem; max-width:60rem; padding-top:1.6rem; border-top:1px solid var(--line); font-style:normal}
+.foot a{color:var(--dim); text-decoration:none; letter-spacing:.08em; border-bottom:1px solid transparent}
+.foot a:hover,.foot a[aria-current]{color:var(--text); border-color:var(--text)}
+.foot a:focus-visible,.cline a:focus-visible{outline:2px solid var(--text); outline-offset:4px}
+.cline{display:flex; flex-wrap:wrap; justify-content:center; gap:8px 28px; margin:0 0 1.2rem; font-style:normal}
+footer{position:relative; z-index:1; text-align:center; color:var(--dim); font-style:italic; padding:0 20px clamp(90px,14vh,140px)}
+@media(prefers-reduced-motion:reduce){h1{animation:none}section.on{animation:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<nav class="top" aria-label="Sections">
+  <a class="brand" href="#top">tidepool</a>
+  <ul>
+    <li><a class="l" data-nav href="#spray">the spray</a></li>
+    <li><a class="l" data-nav href="#high">high pools</a></li>
+    <li><a class="l" data-nav href="#middle">middle pools</a></li>
+    <li><a class="l" data-nav href="#low">low pools</a></li>
+    <li><a class="l" data-nav href="#kelp">kelp edge</a></li>
+    <li><a class="l" data-nav href="#tide">returning tide</a></li>
+    <li><a class="l" data-nav href="#message">message</a></li>
+  </ul>
+  <span class="prog" id="prog"></span>
+</nav>
+
+<nav class="rail" aria-label="Tide height">
+  <a data-nav href="#top"><span>the rocks &nbsp;+4.5 m</span></a>
+  <a data-nav href="#spray"><span>the spray &nbsp;+3.6 m</span></a>
+  <a data-nav href="#high"><span>high pools &nbsp;+2.6 m</span></a>
+  <a data-nav href="#middle"><span>middle pools &nbsp;+1.6 m</span></a>
+  <a data-nav href="#low"><span>low pools &nbsp;+0.6 m</span></a>
+  <a data-nav href="#kelp"><span>the kelp edge &nbsp;−1.0 m</span></a>
+  <a data-nav href="#tide"><span>the returning tide &nbsp;−2.5 m</span></a>
+</nav>
+
+<main>
+  <section class="hero" id="top" data-depth="4.5">
+    <h1>tidepool</h1>
+    <p class="sub">A walk down the shore, one pool at a time.</p>
+    <p class="hint">Touch the water. Then choose where to go.</p>
+    <div class="actions"><a class="btn" href="#spray">Walk down the shore</a></div>
+    <div class="more"><div class="themes">
+      <div><h3>What a tide pool is</h3><p>When the sea retreats, it leaves water trapped in hollows of the rock. Each pool is a small, cut-off piece of ocean that has to keep its residents alive until the tide returns.</p></div>
+      <div><h3>How this site is arranged</h3><p>The navigation runs down the shore in the order the falling tide uncovers it: the spray, the high, middle and low pools, the kelp edge, and then the returning sea. The gauge shows height above the lowest tide. Its figures are illustrative.</p></div>
+      <div><h3>Made to be touched</h3><p>The water answers your pointer. Move across it for small ripples, or click and tap for a larger one. The slow button on the last page calms it.</p></div>
+    </div></div>
+  </section>
+
+  <section id="spray" data-depth="3.6">
+    <div class="col">
+      <h2>the spray</h2>
+      <span class="range">Above the high-tide line &nbsp;·&nbsp; wet only by spray</span>
+      <p>This is the highest band of the shore, above where the tide normally reaches. Water arrives here only as spray and storm waves, so the rock is dry for most of the day. It is the edge where sea life gives way to land.</p>
+      <p>The rock is stained black and orange by lichens, and the only animals are the ones that can put up with salt, sun and long hours without any moisture.</p>
+    </div>
+    <div class="more">
+      <dl class="facts">
+        <div><dt>covered by the sea</dt><dd>Only by spray and storm waves</dd></div>
+        <div><dt>main challenge</dt><dd>Drying out and heat</dd></div>
+        <div><dt>who lives here</dt><dd>Lichens, periwinkles, rock lice</dd></div>
+      </dl>
+      <div class="themes">
+        <div><h3>Periwinkles</h3><p>Small snails that wedge into cracks and seal their shells with a lid to hold in moisture. Some graze this zone and can go for days without being wet.</p></div>
+        <div><h3>Lichen bands</h3><p>The black and orange stains on the rock are lichens and tiny algae. They can dry out completely and revive the moment they are wet again.</p></div>
+        <div><h3>Rock lice</h3><p>Flat, grey and quick, these relatives of pill bugs hide in cracks by day and come out at night to feed on algae and dead material.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="r" id="high" data-depth="2.6">
+    <div class="col">
+      <h2>high pools</h2>
+      <span class="range">+2 to +3 m &nbsp;·&nbsp; reached only by the highest tides</span>
+      <p>Pools this high are refilled by the sea only around the biggest tides. The rest of the time they depend on rain and spray, and each one behaves like a small experiment in extremes.</p>
+      <p>On a hot day the water warms by several degrees and grows saltier as it evaporates. After rain it can turn almost fresh. Only the toughest residents stay.</p>
+    </div>
+    <div class="more">
+      <dl class="facts">
+        <div><dt>covered by the sea</dt><dd>Only around the highest tides</dd></div>
+        <div><dt>main challenge</dt><dd>Swings in temperature and salt</dd></div>
+        <div><dt>who lives here</dt><dd>Copepods, green algae, hardy snails</dd></div>
+      </dl>
+      <div class="themes">
+        <div><h3>Pools that swing</h3><p>Temperature and saltiness can change a great deal within a single day. A resident here has to cope with all of it, with no way to leave.</p></div>
+        <div><h3>Tiny copepods</h3><p>Red-orange specks darting through the water are copepods, small crustaceans that tolerate extreme swings better than almost any animal on the shore.</p></div>
+        <div><h3>Sea lettuce</h3><p>Thin green sheets of algae grow quickly where light is strong, and they survive the salt swings that kill most of their neighbors.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="middle" data-depth="1.6">
+    <div class="col">
+      <h2>middle pools</h2>
+      <span class="range">+1 to +2 m &nbsp;·&nbsp; covered about half of each day</span>
+      <p>Here the sea comes and goes every few hours, so the shore is half land and half ocean. The pools are deeper, the water stays cooler, and the crowd thickens.</p>
+      <p>Mussels, barnacles and anemones cover almost every surface. The main story is competition for space: the best rock is taken, and everything else is packed in around it.</p>
+    </div>
+    <div class="more">
+      <dl class="facts">
+        <div><dt>covered by the sea</dt><dd>Roughly half of each day</dd></div>
+        <div><dt>main challenge</dt><dd>Competition for space</dd></div>
+        <div><dt>who lives here</dt><dd>Mussels, barnacles, anemones, hermit crabs</dd></div>
+      </dl>
+      <div class="themes">
+        <div><h3>Anemones</h3><p>At low tide they close into soft knobs. In the pool they open and wait for food to touch their stinging tentacles. Some clone themselves into carpets of identical animals.</p></div>
+        <div><h3>Hermit crabs</h3><p>They have no shell of their own. As they grow they trade up, and crabs will sometimes queue by size to pass shells along a chain.</p></div>
+        <div><h3>Mussels</h3><p>Anchored by tough threads, mussels hold the most space on the mid shore, and they give shelter to many smaller animals living among them.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="r" id="low" data-depth="0.6">
+    <div class="col">
+      <h2>low pools</h2>
+      <span class="range">0 to +1 m &nbsp;·&nbsp; exposed only at the lowest tides</span>
+      <p>These pools sit close to the edge of the sea and are uncovered only briefly. Their water stays cool and clear, which makes them the richest and most colorful on the shore.</p>
+      <p>Animals that cannot stand long drying live here: sea stars, urchins and the pink crusts of coralline algae.</p>
+    </div>
+    <div class="more">
+      <dl class="facts">
+        <div><dt>covered by the sea</dt><dd>Almost always, except at the lowest tides</dd></div>
+        <div><dt>main challenge</dt><dd>Waves and predators, not drought</dd></div>
+        <div><dt>who lives here</dt><dd>Sea stars, urchins, sculpins, coralline algae</dd></div>
+      </dl>
+      <div class="themes">
+        <div><h3>Sea stars</h3><p>Predatory sea stars feed on mussels and keep them from taking over. Removing them from a shore changes it, which is why ecologists call them keystone predators.</p></div>
+        <div><h3>Urchins</h3><p>Purple urchins graze algae, and in some places they scrape the rock into shallow bowls where they sit sheltered from waves.</p></div>
+        <div><h3>Sculpins</h3><p>These small, rock-colored fish live in the pools and are known to find their way home to the same pool after being moved some distance away.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="kelp" data-depth="-1.0">
+    <div class="col">
+      <h2>the kelp edge</h2>
+      <span class="range">Below 0 m &nbsp;·&nbsp; underwater except at the very lowest tides</span>
+      <p>Past the last pools, the rock slopes into water that almost never leaves. Giant seaweeds called kelp anchor themselves with root-like holdfasts and rise toward the light.</p>
+      <p>The pools above get much of their food and many of their young from here. Larvae and drifting scraps ride the tide up the shore.</p>
+    </div>
+    <div class="more">
+      <dl class="facts">
+        <div><dt>covered by the sea</dt><dd>Underwater nearly all the time</dd></div>
+        <div><dt>main challenge</dt><dd>Wave surge and grazers</dd></div>
+        <div><dt>who lives here</dt><dd>Kelp, urchins, abalone, young fish</dd></div>
+      </dl>
+      <div class="themes">
+        <div><h3>Holdfasts</h3><p>Kelp has no true roots. A tangle called a holdfast grips the rock, and tiny animals live inside it like a hidden village.</p></div>
+        <div><h3>Fast growth</h3><p>Giant kelp can grow as much as half a meter in a single day, forming a canopy that shelters fish below.</p></div>
+        <div><h3>A nursery</h3><p>Many pool animals release larvae into the open water. Kelp forests give young fish somewhere to hide before they move on.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="r" id="tide" data-depth="-2.5">
+    <div class="col">
+      <h2>the returning tide</h2>
+      <span class="range">The sea comes back</span>
+      <p>Then the tide turns. Water spills over the low pools first, then the middle ones, then the high ones, one basin at a time, until the shore is under the sea again.</p>
+      <p>Everything that closed up opens. Anemones unfurl, barnacles extend feathery legs to filter food, and the animals that were waiting begin to feed.</p>
+      <div class="actions">
+        <button type="button" id="stir">Stir the water</button>
+        <button type="button" id="slow" aria-pressed="false">Slow the water</button>
+        <a class="btn" href="#top">Climb back to the rocks</a>
+      </div>
+    </div>
+    <div class="more">
+      <dl class="facts">
+        <div><dt>how often</dt><dd>About twice a day on many coasts</dd></div>
+        <div><dt>what drives it</dt><dd>The gravity of the Moon and Sun</dd></div>
+        <div><dt>biggest tides</dt><dd>Around new and full moon</dd></div>
+      </dl>
+      <div class="themes">
+        <div><h3>Why the sea moves</h3><p>The Moon’s gravity pulls the ocean into bulges, and the Earth turns beneath them. Most coasts see two highs and two lows a day, about 25 minutes later each day.</p></div>
+        <div><h3>Spring and neap</h3><p>Tides are strongest around the new and full moon and weakest at the quarter moons. The highest pools are filled only at the strongest tides.</p></div>
+        <div><h3>Glowing water</h3><p>On some warm nights, waves glow blue where tiny plankton called dinoflagellates are abundant. It is a light show that only appears with the sea.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="r" id="message" data-depth="4.5">
+    <div class="col">
+      <h2>message in a shell</h2>
+      <span class="range">Back above the tide line</span>
+      <p>If you would like to talk about a project, a collaboration or the shore itself, write to me. I read everything and reply as soon as I can.</p>
+    </div>
+    <div class="more">
+      <dl class="facts">
+        <div><dt>email</dt><dd><a id="mail" href="mailto:you@example.com">you@example.com</a></dd></div>
+        <div><dt>github</dt><dd><a href="https://github.com/your-username" rel="noopener">github.com/your-username</a></dd></div>
+        <div><dt>linkedin</dt><dd><a href="https://www.linkedin.com/in/your-name" rel="noopener">linkedin.com/in/your-name</a></dd></div>
+        <div><dt>based in</dt><dd>Your city, your country</dd></div>
+      </dl>
+      <div class="actions"><button type="button" id="copy">Copy email</button></div>
+    </div>
+  </section>
+</main>
+<footer>
+  <nav class="foot" aria-label="All pages">
+    <a data-nav href="#top">the rocks</a><a data-nav href="#spray">the spray</a><a data-nav href="#high">high pools</a><a data-nav href="#middle">middle pools</a><a data-nav href="#low">low pools</a><a data-nav href="#kelp">kelp edge</a><a data-nav href="#tide">returning tide</a><a data-nav href="#message">message</a>
+  </nav>
+  <p class="cline"><a href="mailto:you@example.com">you@example.com</a><a href="https://github.com/your-username" rel="noopener">GitHub</a><a href="https://www.linkedin.com/in/your-name" rel="noopener">LinkedIn</a></p>
+  <p style="margin:0">Tidepool. Rendered live, never the same twice.</p>
+</footer>
+
+<div class="gauge" aria-hidden="true"><b id="dv">+4.5 m</b><i id="dz">dry rock</i></div>
+
+<script id="fs" type="x-shader/x-fragment">
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform vec2 uRes; uniform float uT; uniform float uD; uniform vec4 uR[8];
+const float TAU=6.28318530718;
+float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float H(vec2 p){
+  float h=(.5*sin(p.x*4.+uT*.25+sin(p.y*3.-uT*.2))+.3*sin(p.y*6.-uT*.18+p.x*2.2))*.012;
+  for(int i=0;i<8;i++){
+    vec4 r=uR[i]; float age=uT-r.z;
+    if(age>0.&&age<7.){
+      float d=length(p-r.xy), f=age*.24;
+      h+=sin((d-f)*60.)*exp(-abs(d-f)*8.)*exp(-age*.6)*r.w*.014;
+    }
+  }
+  return h;
+}
+float caustic(vec2 uv,float t){
+  vec2 p=mod(uv*TAU,TAU)-250.; vec2 i=p; float c=1.;
+  for(int n=0;n<5;n++){
+    float tt=t*(1.-3.5/float(n+1));
+    i=p+vec2(cos(tt-i.x)+sin(tt+i.y),sin(tt-i.y)+cos(tt+i.x));
+    c+=1./length(vec2(p.x/(sin(i.x+tt)/.005),p.y/(cos(i.y+tt)/.005)));
+  }
+  c/=5.; c=1.17-pow(c,1.4);
+  return pow(abs(c),8.);
+}
+void main(){
+  vec2 p=(gl_FragCoord.xy-.5*uRes)/uRes.y;
+  float e=.003;
+  vec2 g=vec2(H(p+vec2(e,0.))-H(p-vec2(e,0.)),H(p+vec2(0.,e))-H(p-vec2(0.,e)))/(2.*e);
+  vec2 q=p+g*1.4;
+  float d=uD;
+  float t=uT*.32+23.;
+  float c=caustic(q*.85+.5,t)+.55*caustic(q*1.9+3.,t*1.25);
+  vec3 top=mix(vec3(.17,.58,.62),vec3(.02,.07,.12),pow(d,.55));
+  vec3 bot=mix(vec3(.03,.24,.33),vec3(0.,.012,.03),pow(d,.45));
+  vec3 col=mix(bot,top,smoothstep(-.7,.7,p.y+g.y*2.));
+  float lit=(1.-d*.88);
+  col+=vec3(.5,.93,.88)*c*.62*lit;
+  vec3 n=normalize(vec3(-g*7.,1.));
+  float spec=pow(max(dot(n,normalize(vec3(.3,.5,.8))),0.),90.);
+  col+=vec3(.9,1.,1.)*spec*.5*lit;
+  // bioluminescent specks, only in the dark
+  vec2 gp=q*13.+vec2(0.,uT*.06); vec2 id=floor(gp); vec2 f=fract(gp)-.5;
+  float rn=hash(id); vec2 off=vec2(hash(id+7.1),hash(id+3.3))-.5;
+  float pulse=.5+.5*sin(uT*.7+rn*TAU);
+  float sp=smoothstep(.07,0.,length(f-off*.6))*step(.94,rn)*pulse;
+  vec3 bio=mix(vec3(.15,.95,.8),vec3(.45,.4,1.),hash(id+9.));
+  col+=bio*sp*smoothstep(.55,.85,d)*.9;
+  col*=1.-.32*dot(p,p);
+  col+=(hash(gl_FragCoord.xy+fract(uT))-.5)*.014;
+  gl_FragColor=vec4(col,1.);
+}
+</script>
+
+<script>
+(function(){
+  var cv=document.getElementById('gl');
+  var gl=cv.getContext('webgl',{antialias:false,alpha:false});
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var speed=reduce?.2:1, tAcc=0, last=performance.now();
+  var ripples=[],ri=0,i;
+  for(i=0;i<8;i++)ripples.push([0,0,-99,0]);
+  var W=1,Hh=1,dpr=1,uni={},prog=null;
+
+  function sh(type,src){var s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return gl.getShaderParameter(s,gl.COMPILE_STATUS)?s:null}
+  if(gl){
+    var vs=sh(gl.VERTEX_SHADER,'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}');
+    var fs=sh(gl.FRAGMENT_SHADER,document.getElementById('fs').textContent);
+    if(vs&&fs){
+      prog=gl.createProgram();gl.attachShader(prog,vs);gl.attachShader(prog,fs);gl.linkProgram(prog);
+      if(!gl.getProgramParameter(prog,gl.LINK_STATUS))prog=null;
+    }
+  }
+  if(prog){
+    gl.useProgram(prog);
+    var b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+    var loc=gl.getAttribLocation(prog,'a');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+    ['uRes','uT','uD','uR'].forEach(function(n){uni[n]=gl.getUniformLocation(prog,n)});
+  } else { cv.style.display='none'; }
+
+  function resize(){
+    dpr=Math.min(window.devicePixelRatio||1,1.5)*.8;
+    W=Math.max(1,Math.floor(innerWidth*dpr));Hh=Math.max(1,Math.floor(innerHeight*dpr));
+    cv.width=W;cv.height=Hh;if(prog)gl.viewport(0,0,W,Hh);
+  }
+  addEventListener('resize',resize);resize();
+
+  function toUV(x,y){return [(x*dpr-W/2)/Hh,((innerHeight-y)*dpr-Hh/2)/Hh]}
+  function drop(x,y,amp){var u=toUV(x,y);ripples[ri]=[u[0],u[1],tAcc,amp];ri=(ri+1)%8}
+  var lastMove=0;
+  addEventListener('pointermove',function(e){
+    var n=performance.now();if(n-lastMove<110)return;lastMove=n;drop(e.clientX,e.clientY,.55);
+  });
+  addEventListener('pointerdown',function(e){
+    if(e.target.closest('button,a'))return;drop(e.clientX,e.clientY,1.4);
+  });
+  document.getElementById('stir').addEventListener('click',function(){
+    for(var k=0;k<6;k++)(function(k){setTimeout(function(){
+      drop(innerWidth*(.15+Math.random()*.7),innerHeight*(.15+Math.random()*.7),1.5);
+    },k*220)})(k);
+  });
+  var slow=document.getElementById('slow');
+  slow.addEventListener('click',function(){
+    var on=slow.getAttribute('aria-pressed')==='true';
+    slow.setAttribute('aria-pressed',on?'false':'true');
+    speed=on?(reduce?.2:1):.2;
+    slow.textContent=on?'Slow the water':'Quicken the water';
+  });
+
+  var secs=[].slice.call(document.querySelectorAll('[data-depth]'));
+  var dv=document.getElementById('dv'),dz=document.getElementById('dz');
+  var depth=4.5,shown=null,zoneShown='';
+  var cur=secs[0];
+  function targetDepth(){return +cur.dataset.depth}
+  function zone(h){return h>4?'dry rock':h>3.1?'the spray':h>2.1?'high pools':h>1.1?'middle pools':h>0?'low pools':h>-1.75?'kelp edge':'returning tide'}
+  var dn=0;
+  function frame(now){
+    var dt=Math.min(.05,(now-last)/1000);last=now;tAcc+=dt*speed;
+    depth+=(targetDepth()-depth)*.045;
+    var m=Math.round(depth*10)/10;
+    if(m!==shown){shown=m;dv.textContent=(m>=0?'+':'\u2212')+Math.abs(m).toFixed(1)+' m'}
+    var z=zone(depth);if(z!==zoneShown){zoneShown=z;dz.textContent=z}
+    dn=Math.min(1,Math.max(0,(4.5-depth)/10));
+    if(prog){
+      gl.uniform2f(uni.uRes,W,Hh);gl.uniform1f(uni.uT,tAcc);gl.uniform1f(uni.uD,dn);
+      var flat=[];for(var q=0;q<8;q++)flat.push(ripples[q][0],ripples[q][1],ripples[q][2],ripples[q][3]);
+      gl.uniform4fv(uni.uR,new Float32Array(flat));
+      gl.drawArrays(gl.TRIANGLES,0,3);
+    } else {
+      document.body.style.background='linear-gradient(hsl('+(190-dn*20)+',55%,'+(38-dn*30)+'%),hsl('+(205-dn*10)+',70%,'+(10-dn*8)+'%)) fixed';
+    }
+    requestAnimationFrame(frame);
+  }
+  var navs=[].slice.call(document.querySelectorAll('[data-nav]')),progBar=document.getElementById('prog');
+  function title(x){return x.id==='top'?'the rocks':x.querySelector('h2').textContent}
+  secs.forEach(function(s,k){
+    if(k===0||s.id==='message')return;
+    var box=document.createElement('div');box.className='step';
+    var a=document.createElement('a');a.className='btn';a.href='#'+secs[k-1].id;a.textContent='Back up the shore to '+title(secs[k-1]);box.appendChild(a);
+    if(secs[k+1]&&secs[k+1].id!=='message'){var b=document.createElement('a');b.className='btn';b.href='#'+secs[k+1].id;b.textContent='Down the shore to '+title(secs[k+1]);box.appendChild(b)}
+    s.appendChild(box);
+  });
+  function route(){
+    var id=location.hash.slice(1),s=document.getElementById(id);
+    if(!s||secs.indexOf(s)<0){s=secs[0];id='top'}
+    secs.forEach(function(x){x.classList.toggle('on',x===s)});
+    cur=s;
+    navs.forEach(function(a){
+      if(a.getAttribute('href')==='#'+id)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current');
+    });
+    scrollTo({top:0,behavior:'instant'});
+    var h=s.querySelector('h1,h2');
+    if(h){h.setAttribute('tabindex','-1');h.focus({preventScroll:true})}
+    document.title='Tidepool'+(id==='top'?'':' | '+h.textContent);
+    progBar.style.width=Math.min(100,secs.indexOf(s)/(secs.length-2)*100)+'%';
+  }
+  var cp=document.getElementById('copy');
+  if(cp)cp.addEventListener('click',function(){
+    var em=document.getElementById('mail').textContent;
+    function done(ok){cp.textContent=ok?'Copied':'Copy failed, select it by hand';setTimeout(function(){cp.textContent='Copy email'},2200)}
+    try{navigator.clipboard.writeText(em).then(function(){done(true)},function(){done(false)})}catch(err){done(false)}
+  });
+  addEventListener('hashchange',route);route();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
